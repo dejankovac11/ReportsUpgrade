@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 /*
     Ucitava (unmarshall-uje) json u listu kataloga
-
  */
 
 
@@ -65,15 +64,4 @@ public class BookUnmarshaller {
         return this.catalogList;
     }
 
-
-    /*public static void main(String[] args) throws Exception {
-        File directory = new File("/home/korisnik/Desktop/bookList");
-        JAXBContext jaxbContext = JAXBContext.newInstance(Catalog.class);
-        List <Catalog> catalogList=new ArrayList<Catalog>();
-
-        for(Catalog c:catalogList)
-        {
-            System.out.print(c.toString());
-        }
-    } */
 }
