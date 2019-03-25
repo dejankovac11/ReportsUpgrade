@@ -17,7 +17,7 @@ public class Main
     {
         List<List<Object> >bodyValues=new ArrayList<List<Object>>();
         bodyValues.add(createBookStoreTitle(catalog.getCatalogName())); //catalog's name corresponds to the bookstore's
-        bodyValues.add(createlabels()); //first we create labels (one per each catalog)
+        bodyValues.add(createLabels()); //first we create labels (one per each catalog)
         List<Book> books=catalog.getBookList();
         for(Book book:books)
         {
@@ -34,7 +34,7 @@ public class Main
         return bodyValues;
     }
 
-    private static List<Object> createlabels()
+    private static List<Object> createLabels()
     {
         List<String> labels=new ArrayList<String>();
         labels.add("Book Title");
