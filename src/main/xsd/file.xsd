@@ -1,0 +1,40 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="Izvod">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element type="xs:string" name="Racun"/>
+                <xs:element type="xs:byte" name="BrojIzvoda"/>
+                <xs:element type="xs:date" name="DatumIzvoda"/>
+                <xs:element type="xs:string" name="NazivUcesnikaPP"/>
+                <xs:element type="xs:float" name="PrethodnoStanje"/>
+                <xs:element type="xs:float" name="DugovniPromet"/>
+                <xs:element type="xs:float" name="PotrazniPromet"/>
+                <xs:element type="xs:float" name="NovoStanje"/>
+                <xs:element type="xs:byte" name="BrojNaloga"/>
+                <xs:element type="xs:dateTime" name="DatumRada"/>
+                <xs:element name="Prom">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="NazivNal"/>
+                            <xs:element type="xs:string" name="MestoNal"/>
+                            <xs:element type="xs:string" name="Opis1"/>
+                            <xs:element type="xs:string" name="Opis2"/>
+                            <xs:element type="xs:string" name="RacunNal"/>
+                            <xs:element type="xs:long" name="BrojNaloga"/>
+                            <xs:element type="xs:string" name="BrojVirmana"/>
+                            <xs:element type="xs:short" name="Osnov"/>
+                            <xs:element type="xs:float" name="IznosDug"/>
+                            <xs:element type="xs:float" name="IznosPot"/>
+                            <xs:element type="xs:byte" name="Model"/>
+                            <xs:element type="xs:string" name="Poziv"/>
+                            <xs:element type="xs:byte" name="ModelVezni"/>
+                            <xs:element type="xs:integer" name="PozivVezni"/>
+                            <xs:element type="xs:date" name="DatumKnjizenja"/>
+                            <xs:element type="xs:date" name="DatumValute"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

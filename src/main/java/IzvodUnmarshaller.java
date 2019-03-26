@@ -1,3 +1,5 @@
+import com.test.xsd.Izvod;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -9,59 +11,57 @@ import java.util.List;
  */
 
 
-public class BookUnmarshaller {
+public class IzvodUnmarshaller {
     private File directory;
     private JAXBContext jaxbContext;
-    private List<Catalog>catalogList;
+    private List<Izvod>izvodList;
 
-    public BookUnmarshaller(File directory)
+    public IzvodUnmarshaller(File directory)
     {
         this.directory=directory;
         try {
-            this.jaxbContext = JAXBContext.newInstance(Catalog.class);
+            this.jaxbContext = JAXBContext.newInstance(Izvod.class);
         }
         catch (JAXBException e)
         {
             System.err.println("Unable to create an instance of JAXB object");
             e.printStackTrace();
         }
-        catalogList=new ArrayList<Catalog>();
+        izvodList=new ArrayList<Izvod>();
     }
-    public BookUnmarshaller()
+    public IzvodUnmarshaller()
     {
-        this.directory=new File("/home/korisnik/Desktop/bookList");
+        this.directory=new File("/home/korisnik/Desktop/XML");
         try {
-            this.jaxbContext = JAXBContext.newInstance(Catalog.class);
+            this.jaxbContext = JAXBContext.newInstance(Izvod.class);
         }
         catch (JAXBException e)
         {
             System.err.println("Unable to create an instance of JAXB object");
             e.printStackTrace();
         }
-        catalogList=new ArrayList<Catalog>();
+        izvodList=new ArrayList<Izvod>();
     }
     public void setDirectory(File directory) {
         this.directory = directory;
     }
-    public List<Catalog> readXML()
+    public List<Izvod> readXML()
     {
-        String catalogName;
+        Izvod izvod=new Izvod();
         for (File file: directory.listFiles())
         {
-            catalogName=file.getName();
-            Catalog catalog=new Catalog(catalogName);
             try {
                 Unmarshaller unmarshaller = this.jaxbContext.createUnmarshaller();
-                catalog = (Catalog) unmarshaller.unmarshal(file);
+                izvod = (Izvod) unmarshaller.unmarshal(file);
             }
             catch(JAXBException e)
             {
-                System.err.println("Error while parsing XML file "+catalogName);
+                System.err.println("Error while parsing XML file");
                 e.printStackTrace();
             }
-            this.catalogList.add(catalog);
+            this.izvodList.add(izvod);
         }
-        return this.catalogList;
+        return this.izvodList;
     }
 
 }
