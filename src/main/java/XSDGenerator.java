@@ -51,9 +51,9 @@ public class XSDGenerator {
     public void writeXSD() throws IOException
     {
         String result=this.getFormattedResult();
-        File out=new File("/reportsXML/src/main/resources");
+        File out=new File("reportsXML/src/main/xsd");
         FileWriter writer=new FileWriter(out);
-        writer.append(result);
+        writer.write(result);
         writer.close();
     }
 }

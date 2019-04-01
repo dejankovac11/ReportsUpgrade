@@ -45,11 +45,14 @@ public class IzvodUnmarshaller {
     public void setDirectory(File directory) {
         this.directory = directory;
     }
+
     public List<Izvod> readXML()
     {
         Izvod izvod=new Izvod();
         for (File file: directory.listFiles())
         {
+            if(!file.getName().endsWith(".XML"))
+                continue;
             try {
                 Unmarshaller unmarshaller = this.jaxbContext.createUnmarshaller();
                 izvod = (Izvod) unmarshaller.unmarshal(file);
