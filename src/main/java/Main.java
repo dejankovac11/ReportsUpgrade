@@ -1,13 +1,20 @@
+import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
+import com.google.common.collect.Lists;
 import com.test.xsd.Izvod;
+
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main
 {
@@ -95,16 +102,24 @@ public class Main
         return startingCatalogIndex+1;
     }
 
-    /*private static File handleCorrectXMLPath(File xmlPath, Scanner scanner)
+    public static void sortSpreadSheet(String spreadSheetID) throws IOException
     {
-        while(!xmlPath.isDirectory())
-        {
-            System.out.print("Wrong path to directory. Enter again");
-            String path=scanner.next();
-            xmlPath=new File(path);
-        }
-        return xmlPath;
-    } */
+        BatchUpdateSpreadsheetRequest busReq = new BatchUpdateSpreadsheetRequest();
+        SortSpec ss = new SortSpec();
+// ordering ASCENDING or DESCENDING
+        ss.setSortOrder("DESCENDING");
+// the column number starting from 0
+        ss.setDimensionIndex(2);
+        SortRangeRequest srr = new SortRangeRequest();
+        srr.setSortSpecs(Arrays.asList(ss));
+        srr.setRange(new GridRange().setStartColumnIndex(0).setEndColumnIndex(26).setStartRowIndex(1).setEndColumnIndex(Integer.MAX_VALUE));
+        Request req = new Request();
+        req.setSortRange(srr);
+        busReq.setRequests(Arrays.asList(req));
+// mService is a instance of com.google.api.services.sheets.v4.Sheets
+        SpreadSheetWriter.sheetsService.spreadsheets().batchUpdate(spreadSheetID, busReq).execute();
+    }
+
     public static void enterXMLDirectory(File xmlPath, Scanner scanner) {
         while (!xmlPath.isDirectory()) {
             System.out.print("Wrong path to directory. Enter again: ");
@@ -113,12 +128,12 @@ public class Main
         }
     }
 
-
-    /*public static void update(String directoryPath) throws IOException, GeneralSecurityException
+    public static void create(String url, String directoryPath) throws IOException, GeneralSecurityException
     {
-        File xmlPath=new File(directoryPath);
+        String spreadSheetID=extractSpreadsheetID(url);
         Scanner scanner=new Scanner(System.in);
-        if (!xmlPath.exists()|| !xmlPath.isDirectory())
+        File xmlPath=new File(directoryPath);
+        if (!xmlPath.exists() || !xmlPath.isDirectory())
         {
             enterXMLDirectory(xmlPath,scanner);
         }
@@ -137,7 +152,7 @@ public class Main
             String title=scannerTitle.nextLine();
             SpreadSheetWriter.spreadSheetTitle=title.trim();
         }
-        SpreadSheetWriter.createSpreadsheet();
+        //SpreadSheetWriter.sheetsService.spreadsheets().get(spreadSheetID).values();
         IzvodUnmarshaller izvodUnmarshaller=new IzvodUnmarshaller(xmlPath);
         List<Izvod> izvodi=izvodUnmarshaller.readXML(); //kreiranje i ucitavanje XML koda u listu Izvod objekata
         List<ValueRange> body=new ArrayList<ValueRange>(); //Content of the new spreadsheet
@@ -145,8 +160,8 @@ public class Main
         for (Izvod izvod:izvodi)
         {
             ValueRange valueRange=new ValueRange(); //valueRange for the current catalog
-            String startingCatalogIndexString=calculateStartingIndex(startingIzvodIndex);//each new catalog begins at A1,A3,A5...
-            valueRange.setRange(startingCatalogIndexString); //Initialize starting field for writing the contents of current catalogue
+            String startingIzvodIndexString=calculateStartingIndex(startingIzvodIndex);//each new catalog begins at A1,A3,A5...
+            valueRange.setRange(startingIzvodIndexString); //Initialize starting field for writing the contents of current catalogue
 
             //construct the argument of the setValues method called on current valueRange object
             //bodyValues represents the content of a single izvod
@@ -158,62 +173,75 @@ public class Main
         //after everything is read in, we update the whole content all at once
         BatchUpdateValuesRequest batchBody=new BatchUpdateValuesRequest().setValueInputOption("RAW").setData(body);
         BatchUpdateValuesResponse batchResult = SpreadSheetWriter.sheetsService.spreadsheets().values().batchUpdate(SpreadSheetWriter.SPREADSHEET_ID,batchBody).execute();
-    } */
+        sortSpreadSheet(SpreadSheetWriter.SPREADSHEET_ID);
+    }
 
+    //https://docs.google.com/spreadsheets/d/1sILuxZUnyl_7-MlNThjt765oWshN3Xs-PPLfqYe4DhI/edit#gid=0 --> 1sILuxZUnyl_7-MlNThjt765oWshN3Xs-PPLfqYe4DhI
+    public static String extractSpreadsheetID(String urlPath)
+    {
+        Pattern spreadSheetIdPattern=Pattern.compile(".+?/d/(.+?)/.*");
+        Matcher matcher=spreadSheetIdPattern.matcher( urlPath);
+        if(matcher.matches())
+            return matcher.group(1);
+        return "";
+    }
 
+    public static void updateSpreadSheet(String url, String directoryPath) throws GeneralSecurityException, IOException
+    {
+        File xmlPath=new File(directoryPath);
+        if (!xmlPath.exists() || !xmlPath.isDirectory())
+        {
+            Scanner scanner=new Scanner(System.in);
+            enterXMLDirectory(xmlPath,scanner);
+        }
+        SpreadSheetWriter.setup();
+        String spreadSheetID=extractSpreadsheetID(url);
+        IzvodUnmarshaller izvodUnmarshaller=new IzvodUnmarshaller(xmlPath);
+        List<Izvod> izvodi=izvodUnmarshaller.readXML();
+        //List<ValueRange> bodyAppend=new ArrayList<ValueRange>(); //Content of the new spreadsheet
+        int startingIzvodIndex=2; //where to begin writing new ValueRange object
+        for (Izvod izvod:izvodi)
+        {
+            ValueRange valueRange=new ValueRange(); //valueRange for the current catalog
+            String startingIzvodIndexString=calculateStartingIndex(startingIzvodIndex);//each new catalog begins at A1,A3,A5...
+            valueRange.setRange(startingIzvodIndexString); //Initialize starting field for writing the contents of current catalogue
+            List<List<Object> >bodyValues=createBodyValues(izvod, startingIzvodIndex);
+            valueRange.setValues(bodyValues);
+            //bodyAppend.add(valueRange);
+            startingIzvodIndex=updateStartingIndex(startingIzvodIndex);
+            AppendValuesResponse appendValuesResponse=SpreadSheetWriter.sheetsService.spreadsheets().values().append(spreadSheetID,startingIzvodIndexString,valueRange).setValueInputOption("USER_ENTERED")
+                    .setInsertDataOption("INSERT_ROWS").setValueInputOption("RAW").execute();
+        }
+        sortSpreadSheet(spreadSheetID);
+    }
 
     public static void main(String[] args) throws IOException, GeneralSecurityException
     {
-        File xmlPath;
-        String path;
-        Scanner scanner=new Scanner(System.in);
-        if (args.length==0 || ! new File(args[0]).isDirectory())
+        if(args.length<2)
         {
-            System.out.print("Enter again: ");
-            path=scanner.next();
-            xmlPath=new File(path);
-            enterXMLDirectory(xmlPath,scanner);
+            System.out.println("Incorrect arguments.");
+            System.out.println("Program runs with create path or update url path.");
+            System.exit(1);
+        }
+        if(args[0].compareTo("-create")!=0 && args[0].compareTo("-update")!=0)
+        {
+            System.out.println("Incorrect options.");
+            System.exit(1);
+
+
+        }
+        if(args[0].compareTo("-create")==0)
+        {
+            create(args[1],args[2]);
+        }
+        else if(args[0].compareTo("-update")==0 && args.length==3)
+        {
+            updateSpreadSheet(args[1],args[2]);
         }
         else
         {
-            xmlPath=new File(args[0]);
-            enterXMLDirectory(xmlPath,scanner);
+            System.out.println("Insufficient number of arguments.");
+            System.exit(1);
         }
-        SpreadSheetWriter.setup(); //Establishes new connection and authorization
-        System.out.print("Default title is XMLResults. Change file title [Y/n]: ");
-        String changeTitleAnswer=scanner.next();
-        while(changeTitleAnswer.compareTo("Y")!=0 && changeTitleAnswer.compareTo("n")!=0)
-        {
-            System.out.print("Wrong response. Enter new response: ");
-            changeTitleAnswer=scanner.next();
-        }
-        if(changeTitleAnswer.compareTo("Y")==0)
-        {
-            System.out.print("Enter new title: ");
-            Scanner scannerTitle=new Scanner(System.in);
-            String title=scannerTitle.nextLine();
-            SpreadSheetWriter.spreadSheetTitle=title.trim();
-        }
-        SpreadSheetWriter.createSpreadsheet();
-        IzvodUnmarshaller izvodUnmarshaller=new IzvodUnmarshaller(xmlPath);
-        List<Izvod> izvodi=izvodUnmarshaller.readXML(); //kreiranje i ucitavanje XML koda u listu Izvod objekata
-        List<ValueRange> body=new ArrayList<ValueRange>(); //Content of the new spreadsheet
-        int startingIzvodIndex=1; //where to begin writing new ValueRange object
-        for (Izvod izvod:izvodi)
-        {
-            ValueRange valueRange=new ValueRange(); //valueRange for the current catalog
-            String startingCatalogIndexString=calculateStartingIndex(startingIzvodIndex);//each new catalog begins at A1,A3,A5...
-            valueRange.setRange(startingCatalogIndexString); //Initialize starting field for writing the contents of current catalogue
-
-            //construct the argument of the setValues method called on current valueRange object
-            //bodyValues represents the content of a single izvod
-            List<List<Object> >bodyValues=createBodyValues(izvod, startingIzvodIndex);
-            valueRange.setValues(bodyValues);
-            body.add(valueRange);
-            startingIzvodIndex=updateStartingIndex(startingIzvodIndex);
-        }
-        //after everything is read in, we update the whole content all at once
-        BatchUpdateValuesRequest batchBody=new BatchUpdateValuesRequest().setValueInputOption("RAW").setData(body);
-        BatchUpdateValuesResponse batchResult = SpreadSheetWriter.sheetsService.spreadsheets().values().batchUpdate(SpreadSheetWriter.SPREADSHEET_ID,batchBody).execute();
     }
 }

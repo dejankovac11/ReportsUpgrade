@@ -15,7 +15,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.sheets.v4.SheetsScopes;
 
-public class GoogleAuthorizeUtil {
+public class GoogleAuthorizeUtil { //isto sto i getCredential
     public static Credential authorize() throws IOException, GeneralSecurityException {
         InputStream in = GoogleAuthorizeUtil.class.getResourceAsStream("/credentials.json");
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JacksonFactory.getDefaultInstance(), new InputStreamReader(in));
