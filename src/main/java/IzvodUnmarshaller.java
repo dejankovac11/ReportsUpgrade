@@ -1,14 +1,10 @@
 import com.test.xsd.Izvod;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-/*
-    Ucitava (unmarshall-uje) json u listu kataloga
- */
 
 
 public class IzvodUnmarshaller {
